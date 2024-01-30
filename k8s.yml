@@ -1,0 +1,79 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mycatsblog-net
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mycatsblog
+  namespace: mycatsblog-net
+  labels:
+    app: mycatsblog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mycatsblog
+  template:
+    metadata:
+      labels:
+        app: mycatsblog
+    spec:
+#      imagePullSecrets:
+#      - name: dockerhub
+      containers:
+      - name: mycatsblog
+        image: antitux/mycatsblog.net:latest
+        ports:
+        - containerPort: 80
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mycatsblog-svc
+  namespace: mycatsblog-net
+  labels:
+    service: mycatsblog-svc
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+  selector:
+    app: mycatsblog
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mycatsblog-ingress
+  namespace: mycatsblog-net
+#  annotations:
+#    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  rules:
+  - http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: antitux-svc
+              port:
+                number: 80
+#  tls:
+#  - hosts:
+#    - '*.antitux.net'
+#    - '*.antitux.dev'
+#    - '*.ompgonies.net'
+#    - '*.antitux.us'
+#    - '*.antx.dev'
+#    - 'antitux.net'
+#    - 'antitux.dev'
+#    - 'antitux.us'
+#    - 'omgponnies.net'
+#    - 'antx.dev'
+#    secretName: myingress-cert
